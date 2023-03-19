@@ -327,7 +327,7 @@ sample_array_3 = [
 # For outside maps
 def generate_chatgpt_map(query: str) -> str:
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo-0301",
+        model="gpt-4",
         messages=[
             {
                 "role": "system",

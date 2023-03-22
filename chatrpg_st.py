@@ -51,6 +51,13 @@ def gen_aws_map(query):
     for index, val in enumerate(final_array):
         map_data["data"][index] = val
 
+    # Gen NPCs
+    hardcoded_npc_query = "Generate 3 NPCs for a medieval castle town"
+    npcs = ai_utils.generate_chatgpt_npcs(hardcoded_npc_query)
+    
+    # TODO add NPCs to the map
+    
+
     # Save the file
     utils.save_json(map_json_loc, map_data)
 
@@ -134,7 +141,12 @@ def app() -> None:
 
     if st.button("Submit Query"):
         with st.spinner("Generating..."):
+            
+            # Gen Game
             gen_aws_map(query)
+
+
+
 
             timestamp = datetime.datetime.now().timestamp()
 

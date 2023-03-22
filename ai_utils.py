@@ -324,6 +324,104 @@ sample_array_3 = [
 ]
 
 
+npc_sample_query = "Generate 5 NPCs for a medieval castle town"
+
+npc_sample = [
+    {
+        "name": "Sir Reginald",
+        "role": "knight",
+        "gender": "male",
+        "dialogue": "Greetings, traveler! I am Sir Reginald, a knight in service of the king. If you seek adventure, you've come to the right place.",
+    },
+    {
+        "name": "Sister Elara",
+        "role": "cleric",
+        "gender": "female",
+        "dialogue": "Blessings upon you, weary traveler. I am Sister Elara, a humble cleric tending to the sick and injured. May the light guide your path.",
+    },
+    {
+        "name": "Old Man Cedric",
+        "role": "villager",
+        "gender": "male",
+        "dialogue": "Ah, a new face in town! I'm Old Man Cedric, and I've lived here all my life. If you need any advice, don't hesitate to ask.",
+    },
+    {
+        "name": "Lady Isabella",
+        "role": "mage",
+        "gender": "female",
+        "dialogue": "Greetings, traveler. I am Lady Isabella, a mage studying the arcane arts. Be careful with magic - it can be as dangerous as it is powerful.",
+    },
+    {
+        "name": "Young Tim",
+        "gender": "male",
+        "role": "villager",
+        "dialogue": "Hi there! I'm Young Tim. I love exploring the castle and finding secret passages. Maybe we can explore together sometime!",
+    },
+]
+
+npc_sample_dragon_query = "Generate 3 NPCs for a medieval castle town by a river, the main quest, is for the heroes to slay an evil dragon across the river "
+
+npc_sample_dragon = [
+    {
+        "name": "Sir Gareth",
+        "role": "knight",
+        "gender": "male",
+        "dialogue": "Greetings, brave one! I am Sir Gareth, entrusted with the task of slaying the evil dragon across the river. Join me in this noble quest!",
+    },
+    {
+        "name": "Mystic Marina",
+        "role": "mage",
+        "gender": "female",
+        "dialogue": "Hello, traveler. I am Mystic Marina, a mage researching the dragon's weaknesses. Together, we can bring an end to its reign of terror.",
+    },
+    {
+        "name": "Fisherman Fergus",
+        "role": "villager",
+        "gender": "male",
+        "dialogue": "Ahoy, adventurer! I'm Fisherman Fergus. The dragon's presence has made fishing near impossible. Please, help us restore peace to our town.",
+    },
+]
+
+
+# For outside maps
+def generate_chatgpt_npcs(query: str) -> str:
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",  # GPT3.5 is good enough since its just text generation
+        messages=[
+            {
+                "role": "system",
+                "content": "You are an RPG Maker Map Generation Bot. Your role is to generate text for NPCs in a given area based on a user's query. There are 4 types of NPCs, for this game: knight cleric, villager, and mage Do not provide an explanation, just the array for the NPCs. The output is used in a python application and any explanation text will break the system.",
+            },
+            {
+                "role": "user",
+                "content": f"""{npc_sample_query}""",
+            },
+            {
+                "role": "assistant",
+                "content": f"""{npc_sample}""",
+            },
+            {
+                "role": "user",
+                "content": f"""{npc_sample_dragon_query}""",
+            },
+            {
+                "role": "assistant",
+                "content": f"""{npc_sample_dragon}""",
+            },
+            {
+                "role": "user",
+                "content": f"""{npc_sample_dragon}""",
+            },
+        ],
+    )
+
+    # print(response)
+    # question = response["choices"][0]["text"].strip(" \n")
+    game_map = response["choices"][0]["message"]["content"].strip(" \n")
+
+    return game_map
+
+
 # For outside maps
 def generate_chatgpt_map(query: str) -> str:
     response = openai.ChatCompletion.create(
@@ -331,7 +429,7 @@ def generate_chatgpt_map(query: str) -> str:
         messages=[
             {
                 "role": "system",
-                "content": "You are a a RPG Maker Map Generation Bot. Your role is to generate two dimensional maps e.g (x,y coordinates) for RPG Maker based games based on a user's query. You must provide a tile for each coordinate of the map. The user also provide the number of tiles. The value 2816 represents a grass tile and the value 3200 represents a dirt road tile and 2336 represents a water tile. Do not provide an explanation, just the array for the user. The output is being used in a python application and any explanation text will break the system.",
+                "content": "You are an RPG Maker Map Generation Bot. Your role is to generate two dimensional maps e.g (x,y coordinates) for RPG Maker based games based on a user's query. You must provide a tile for each coordinate of the map. The user will also provide the number of tiles. The value 2816 represents a grass tile and the value 3200 represents a dirt road tile and 2336 represents a water tile. Do not provide an explanation, just the array for the user. The output is used in a python application and any explanation text will break the system.",
             },
             {
                 "role": "user",

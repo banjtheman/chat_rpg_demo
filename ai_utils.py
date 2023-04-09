@@ -1,6 +1,7 @@
 import openai
 import os
-
+import random
+import utils
 
 # Set open AI Key
 openai.api_key = os.environ["OPEN_AI_KEY"]
@@ -383,7 +384,187 @@ npc_sample_dragon = [
 ]
 
 
-# For outside maps
+# NPC Map, hmm this is slighty annoying
+
+
+# Cleric Actor1  Male 7, Female 8
+# Villager Actor 1 Male 0, female 3
+# Mage Actor3    2 - male 3- female
+# Knights Actor3 6- male  7 -female
+
+npc_map = {
+    "cleric": {"actor": "Actor1", "male": 6, "female": 7},
+    "villager": {"actor": "Actor1", "male": 0, "female": 3},
+    "mage": {"actor": "Actor3", "male": 2, "female": 3},
+    "knight": {"actor": "Actor3", "male": 6, "female": 7},
+}
+
+
+# Thank you chatgpt :)
+def split_text(text, max_length):
+    # Split the input text into a list of words
+    words = text.split()
+    # Initialize an empty list to store the lines of text
+    lines = []
+    # Initialize an empty list to store the words for the current line
+    current_line = []
+
+    # Iterate through each word in the list of words
+    for word in words:
+        # Check if adding the current word to the current line would keep its length within the limit
+        if len(" ".join(current_line + [word])) <= max_length:
+            # If so, append the word to the current line
+            current_line.append(word)
+        else:
+            # Otherwise, join the words in the current line with spaces, and append the result to the list of lines
+            lines.append(" ".join(current_line))
+            # Start a new line with the current word
+            current_line = [word]
+
+    # After iterating through all words, add the last line to the list of lines
+    if current_line:
+        lines.append(" ".join(current_line))
+
+    # Return the list of lines
+    return lines
+
+
+def gen_npc(npc, index):
+    curr_index = index + 1
+    npc_role = npc["role"]
+    npc_gender = npc["gender"]
+    npc_name = npc["name"]
+    npc_dialogue = npc["dialogue"]
+
+    split_n = 45
+
+    npc_text = split_text(npc_dialogue, split_n)
+    # A place holder to replace latter
+    for npc_index, text in enumerate(npc_text):
+        text = text.replace("'", "LOLCATSNBURGER")
+        npc_text[npc_index] = text
+
+    # print(npc_text)
+
+    example_event = {
+        "id": 2,
+        "name": "EV002",
+        "note": "",
+        "pages": [
+            {
+                "conditions": {
+                    "actorId": 1,
+                    "actorValid": False,
+                    "itemId": 1,
+                    "itemValid": False,
+                    "selfSwitchCh": "A",
+                    "selfSwitchValid": False,
+                    "switch1Id": 1,
+                    "switch1Valid": False,
+                    "switch2Id": 1,
+                    "switch2Valid": False,
+                    "variableId": 1,
+                    "variableValid": False,
+                    "variableValue": 0,
+                },
+                "directionFix": False,
+                "image": {
+                    "tileId": 0,
+                    "characterName": "Actor3",
+                    "direction": 2,
+                    "pattern": 0,
+                    "characterIndex": 6,
+                },
+                "list": [
+                    {
+                        "code": 101,
+                        "indent": 0,
+                        "parameters": ["Actor3", 6, 0, 2, "Knight"],
+                    },
+                    # {"code": 401, "indent": 0, "parameters": ["Command me"]},
+                    # {"code": 0, "indent": 0, "parameters": []},
+                ],
+                "moveFrequency": 3,
+                "moveRoute": {
+                    "list": [{"code": 0, "parameters": []}],
+                    "repeat": True,
+                    "skippable": False,
+                    "wait": False,
+                },
+                "moveSpeed": 3,
+                "moveType": 0,
+                "priorityType": 1,
+                "stepAnime": False,
+                "through": False,
+                "trigger": 0,
+                "walkAnime": True,
+            }
+        ],
+        "x": 1,
+        "y": 0,
+    }
+
+    example_event["id"] = curr_index
+    example_event[
+        "name"
+    ] = f"EV00{curr_index}"  # TODO will need to change if more than 9 events
+    example_event["pages"][0]["image"]["characterName"] = npc_map[npc_role][
+        "actor"
+    ]  # actor type
+    example_event["pages"][0]["image"]["characterIndex"] = npc_map[npc_role][
+        npc_gender
+    ]  # npc gender
+
+    example_event["pages"][0]["list"][0]["parameters"][0] = npc_map[npc_role][
+        "actor"
+    ]  # actor type
+    example_event["pages"][0]["list"][0]["parameters"][1] = npc_map[npc_role][
+        npc_gender
+    ]  # actor gender
+    example_event["pages"][0]["list"][0]["parameters"][4] = npc_name  # NPC Name
+
+    # example_event["pages"][0]["list"][1]["parameters"][0] = npc_dialogue  # diaglogue
+
+    # Add all text events in the char intervals
+    for curr_text in npc_text:
+        text_json = {
+            "code": 401,
+            "indent": 0,
+            "parameters": [f"{curr_text}"],
+        }  # diaglogue
+        example_event["pages"][0]["list"].append(text_json)
+    example_event["pages"][0]["list"].append({"code": 0, "indent": 0, "parameters": []}) # final parm thats in all chats
+ 
+    # TODO will need to place the NPCs some where that make sense
+    example_event["x"] = random.randint(0, 9)
+    example_event["y"] = random.randint(0, 9)
+
+    return example_event
+
+
+def create_npc_events(npcs):
+    events = [
+        "null",
+    ]
+    for index, npc in enumerate(npcs):
+        print("Creating NPC event")
+
+        npc_event = gen_npc(npc, index)
+        events.append(npc_event)
+
+    new_string = (
+        str(events)
+        .replace("True", "true")
+        .replace("False", "false")
+        .replace("'null'", "null")
+    )
+    new_string = new_string.replace("'", '"')
+    new_string = new_string.replace("LOLCATSNBURGER", "'")
+
+    return new_string
+
+
+# For npcs
 def generate_chatgpt_npcs(query: str) -> str:
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",  # GPT3.5 is good enough since its just text generation
@@ -410,7 +591,7 @@ def generate_chatgpt_npcs(query: str) -> str:
             },
             {
                 "role": "user",
-                "content": f"""{npc_sample_dragon}""",
+                "content": f"""{query}""",
             },
         ],
     )
@@ -467,3 +648,12 @@ def generate_chatgpt_map(query: str) -> str:
     game_map = response["choices"][0]["message"]["content"].strip(" \n")
 
     return game_map
+
+
+# Test
+# print("hello?")
+# npc_string = create_npc_events(npc_sample_dragon)
+# print(npc_string)
+# test_map = utils.read_from_file("test_map.json")
+# test_map = test_map.replace('"events": []', f'"events":{npc_string}')
+# utils.write_to_file("test_map2.json", test_map)

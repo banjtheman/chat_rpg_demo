@@ -29,7 +29,7 @@ def gen_aws_map(query):
     game_map = ai_utils.generate_chatgpt_map(query)
 
     print(game_map)
-    game_map_array = eval(game_map)
+    game_map_array = eval(game_map) # O NOES WE ARE EVALING from ChatGPT
 
     print(len(game_map_array))
 
@@ -51,15 +51,21 @@ def gen_aws_map(query):
     for index, val in enumerate(final_array):
         map_data["data"][index] = val
 
+    # Dump events?
+    map_data["events"] = []
+    utils.save_json(map_json_loc, map_data)
+
     # Gen NPCs
     hardcoded_npc_query = "Generate 3 NPCs for a medieval castle town"
     npcs = ai_utils.generate_chatgpt_npcs(hardcoded_npc_query)
-    
-    # TODO add NPCs to the map
-    
-
+    npc_json = eval(npcs)
+    npc_string = ai_utils.create_npc_events(npc_json)
+     # O NOES WE ARE EVALING from ChatGPT
+    # print(npc_string)
+    test_map = utils.read_from_file("test_map.json")
+    test_map = test_map.replace('"events": []', f'"events":{npc_string}')
     # Save the file
-    utils.save_json(map_json_loc, map_data)
+    utils.write_to_file("test_map.json", test_map)
 
     # Upload to s3
     aws_utils.upload_file_to_s3_public(map_json_loc, S3_BUCKET, JSON_OBJECT)
@@ -141,12 +147,8 @@ def app() -> None:
 
     if st.button("Submit Query"):
         with st.spinner("Generating..."):
-            
             # Gen Game
             gen_aws_map(query)
-
-
-
 
             timestamp = datetime.datetime.now().timestamp()
 
